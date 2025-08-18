@@ -95,7 +95,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "📱 The mobile app is cross-platform (React Native) with chat and team features\n"
             "🔒 TrustCoin emphasizes transparency, community-driven development, and long-term value"
         )
-        await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        # Check if message has photo, if so send new message instead of editing
+        if query.message.photo:
+            await query.message.reply_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        else:
+            await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
 
     elif data == "points":
         text = (
@@ -119,7 +123,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "• Gas fees initially covered by project\n"
             "• **Burn Rates:** 1% transfers, 0.5% conversions, 2% premium features"
         )
-        await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        # Check if message has photo, if so send new message instead of editing
+        if query.message.photo:
+            await query.message.reply_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        else:
+            await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
 
     elif data == "missions":
         text = (
@@ -148,7 +156,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "• **Probabilities:** 50% (1-100), 30% (101-200), 15% (201-300), 5% (301-500)\n"
             "• Watch ads for additional spins and multipliers!"
         )
-        await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        # Check if message has photo, if so send new message instead of editing
+        if query.message.photo:
+            await query.message.reply_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        else:
+            await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
 
     elif data == "referral":
         text = (
@@ -172,7 +184,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "• Compete on global leaderboards\n"
             "• Participate in community events"
         )
-        await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        # Check if message has photo, if so send new message instead of editing
+        if query.message.photo:
+            await query.message.reply_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        else:
+            await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
 
     elif data == "roadmap":
         text = (
@@ -210,7 +226,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "🌉 Cross-chain bridge development\n"
             "💳 Global payment system integration"
         )
-        await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        # Check if message has photo, if so send new message instead of editing
+        if query.message.photo:
+            await query.message.reply_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        else:
+            await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
 
     elif data == "download":
         # Download app section with direct links
@@ -267,7 +287,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "• **24/7 monitoring** infrastructure\n\n"
             "✅ **Your safety is our priority!**"
         )
-        await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        # Check if message has photo, if so send new message instead of editing
+        if query.message.photo:
+            await query.message.reply_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        else:
+            await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
 
     elif data == "faq":
         text = (
@@ -293,7 +317,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "**Q10: How can I contact support?**\n"
             "A: Join our Telegram group or visit our website for support."
         )
-        await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        # Check if message has photo, if so send new message instead of editing
+        if query.message.photo:
+            await query.message.reply_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        else:
+            await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
 
     elif data == "social":
         # Social links as buttons
@@ -325,14 +353,26 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     # Language group handlers removed - now using direct URL buttons
 
     elif data == "back":
-        await query.edit_message_text(
-            "Main menu:", reply_markup=build_main_menu()
-        )
+        # Check if message has photo, if so send new message instead of editing
+        if query.message.photo:
+            await query.message.reply_text(
+                "Main menu:", reply_markup=build_main_menu()
+            )
+        else:
+            await query.edit_message_text(
+                "Main menu:", reply_markup=build_main_menu()
+            )
 
     else:
-        await query.edit_message_text(
-            "Invalid option. Returning to main menu.", reply_markup=build_main_menu()
-        )
+        # Check if message has photo, if so send new message instead of editing
+        if query.message.photo:
+            await query.message.reply_text(
+                "Invalid option. Returning to main menu.", reply_markup=build_main_menu()
+            )
+        else:
+            await query.edit_message_text(
+                "Invalid option. Returning to main menu.", reply_markup=build_main_menu()
+            )
 
 def main() -> None:
     """Initialize the bot and start polling."""

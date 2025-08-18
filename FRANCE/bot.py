@@ -79,6 +79,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     await query.answer()
     data = query.data
 
+    def send_or_edit_message(text, reply_markup=None, parse_mode="Markdown"):
+        """Helper function to send new message if photo exists, otherwise edit."""
+        if query.message.photo:
+            return query.message.reply_text(text=text, reply_markup=reply_markup, parse_mode=parse_mode)
+        else:
+            return query.edit_message_text(text=text, reply_markup=reply_markup, parse_mode=parse_mode)
+
     if data == "overview":
         text = (
             "📋 **Aperçu & Commencer**\n\n"
@@ -95,7 +102,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "📱 L'application mobile est multiplateforme (React Native) avec des fonctionnalités de chat et d'équipe\n"
             "🔒 TrustCoin met l'accent sur la transparence, le développement communautaire et la valeur à long terme"
         )
-        await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        await send_or_edit_message(text, build_main_menu())
 
     elif data == "points":
         text = (
@@ -119,7 +126,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "• Frais de gaz initialement couverts par le projet\n"
             "• **Taux de Brûlage :** 1% transferts, 0,5% conversions, 2% fonctionnalités premium"
         )
-        await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        await send_or_edit_message(text, build_main_menu())
 
     elif data == "missions":
         text = (
@@ -148,7 +155,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "• **Probabilités :** 50% (1-100), 30% (101-200), 15% (201-300), 5% (301-500)\n"
             "• Regardez des publicités pour des tours supplémentaires et des multiplicateurs !"
         )
-        await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        await send_or_edit_message(text, build_main_menu())
 
     elif data == "referral":
         text = (
@@ -172,7 +179,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "• Concourir sur les tableaux de bord mondiaux\n"
             "• Participer aux événements communautaires"
         )
-        await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        await send_or_edit_message(text, build_main_menu())
 
     elif data == "roadmap":
         text = (
@@ -210,7 +217,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "• Intégrations cross-chain\n"
             "• Adoption massive"
         )
-        await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        await send_or_edit_message(text, build_main_menu())
 
     elif data == "download":
         # Download app section with direct links
@@ -238,9 +245,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "• 50 MB d'espace de stockage\n\n"
             "🔗 Cliquez sur les boutons ci-dessous pour télécharger :"
         )
-        await query.edit_message_text(
-            text, reply_markup=download_keyboard, parse_mode="Markdown"
-        )
+        await send_or_edit_message(text, download_keyboard)
 
     elif data == "security":
         text = (
@@ -267,7 +272,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "• Infrastructure de **surveillance 24/7**\n\n"
             "✅ **Votre sécurité est notre priorité !**"
         )
-        await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        await send_or_edit_message(text, build_main_menu())
 
     elif data == "faq":
         text = (
@@ -293,7 +298,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "**Q : TrustCoin est-il disponible dans le monde entier ?**\n"
             "R : Oui, TrustCoin est disponible mondialement avec support multilingue."
         )
-        await query.edit_message_text(text=text, reply_markup=build_main_menu(), parse_mode="Markdown")
+        await send_or_edit_message(text, build_main_menu())
 
     elif data == "social":
         # Social links as buttons
@@ -305,9 +310,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             [InlineKeyboardButton("🐦 X/Twitter ➡️", url="https://x.com/TBNTrustCoin")],
             [InlineKeyboardButton("⬅️ Retour au Menu Principal", callback_data="back")],
         ])
-        await query.edit_message_text(
-            "Choisissez un lien à ouvrir:", reply_markup=social_keyboard
-        )
+        await send_or_edit_message("Choisissez un lien à ouvrir :", social_keyboard)
 
     elif data == "language_groups":
         language_keyboard = InlineKeyboardMarkup([
@@ -328,19 +331,15 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "• 🎁 Événements exclusifs et cadeaux\n"
             "• 📚 Tutoriels et guides dans votre langue"
         )
-        await query.edit_message_text(text=text, reply_markup=language_keyboard, parse_mode="Markdown")
+        await send_or_edit_message(text, language_keyboard)
 
     # Language group handlers removed - now using direct URL buttons
 
     elif data == "back":
-        await query.edit_message_text(
-            "Menu principal:", reply_markup=build_main_menu()
-        )
+        await send_or_edit_message("Menu principal :", build_main_menu())
 
     else:
-        await query.edit_message_text(
-            "Option invalide. Retour au menu principal.", reply_markup=build_main_menu()
-        )
+        await send_or_edit_message("Option invalide. Retour au menu principal.", build_main_menu())
 
 def main() -> None:
     """Initialize the bot and start polling."""
