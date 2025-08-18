@@ -1,0 +1,17 @@
+# TrustCoin Bot Dependencies
+# Core Telegram Bot Library
+python-telegram-bot==20.7
+
+# Environment Variables Management
+python-dotenv==1.0.0
+
+# Additional useful libraries for future enhancements
+requests==2.31.0
+aiohttp==3.9.1
+
+# For production deployment (optional)
+gunicorn==21.2.0
+uvicorn==0.24.0
+
+# Logging and monitoring (optional)
+loguru==0.7.2

@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # English Bot Service
+  trustcoin-bot-english:
+    build: .
+    container_name: trustcoin-english-bot
+    command: python ENGLISH/bot.py
+    environment:
+      - BOT_TOKEN_ENG=${BOT_TOKEN_ENG}
+      - BOT_TOKEN_ARA=${BOT_TOKEN_ARA}
+      - BOT_TOKEN_FR=${BOT_TOKEN_FR}
+      - DEBUG=${DEBUG:-False}
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - trustcoin-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Arabic Bot Service
+  trustcoin-bot-arabic:
+    build: .
+    container_name: trustcoin-arabic-bot
+    command: python ARABIC/bot.py
+    environment:
+      - BOT_TOKEN_ENG=${BOT_TOKEN_ENG}
+      - BOT_TOKEN_ARA=${BOT_TOKEN_ARA}
+      - BOT_TOKEN_FR=${BOT_TOKEN_FR}
+      - DEBUG=${DEBUG:-False}
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - trustcoin-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # French Bot Service
+  trustcoin-bot-french:
+    build: .
+    container_name: trustcoin-french-bot
+    command: python FRANCE/bot.py
+    environment:
+      - BOT_TOKEN_ENG=${BOT_TOKEN_ENG}
+      - BOT_TOKEN_ARA=${BOT_TOKEN_ARA}
+      - BOT_TOKEN_FR=${BOT_TOKEN_FR}
+      - DEBUG=${DEBUG:-False}
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - trustcoin-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional: Monitoring service (Uncomment if needed)
+  # watchtower:
+  #   image: containrrr/watchtower
+  #   container_name: trustcoin-watchtower
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   command: --interval 300 --cleanup
+  #   restart: unless-stopped
+  #   networks:
+  #     - trustcoin-network
+
+networks:
+  trustcoin-network:
+    driver: bridge
+    name: trustcoin-network
+
+# Optional: Volumes for persistent data
+volumes:
+  trustcoin-logs:
+    driver: local
