@@ -1,5 +1,10 @@
 import os
-rt (
+import logging
+import asyncio
+import threading
+from dotenv import load_dotenv
+from flask import Flask, request
+from telegram import (
     Update,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -11,9 +16,13 @@ from telegram.ext import (
     CallbackQueryHandler,
     ContextTypes,
 )
+from telegram.error import InvalidToken
 
 # Load environment variables from .env file
-loa# getenv('BOT_TOKEN_ENG')
+load_dotenv()
+
+# Get bot token from environment variables
+BOT_TOKEN_ENG = os.getenv('BOT_TOKEN_ENG')
 
 # Validate that the bot token is loaded
 if not BOT_TOKEN_ENG:
