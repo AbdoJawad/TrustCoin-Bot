@@ -1,5 +1,9 @@
 import os
+import logging
+import asyncio
+import threading
 from dotenv import load_dotenv
+from flask import Flask, request
 from telegram import (
     Update,
     InlineKeyboardButton,
@@ -12,9 +16,17 @@ from telegram.ext import (
     CallbackQueryHandler,
     ContextTypes,
 )
+from telegram.error import InvalidToken
 
 # Load environment variables from .env file
 load_dotenv()
+
+# Configure logging
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 # Get bot token from environment variables
 BOT_TOKEN_FR = os.getenv('BOT_TOKEN_FR')
@@ -341,14 +353,66 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     else:
         await send_or_edit_message("Option invalide. Retour au menu principal.", build_main_menu())
 
+# Flask app for webhook
+flask_app = Flask(__name__)
+
+@flask_app.route('/webhook', methods=['POST'])
+def webhook():
+    """Handle incoming webhook updates."""
+    try:
+        update = Update.de_json(request.get_json(force=True), bot_app)
+        asyncio.run(bot_app.process_update(update))
+        return 'OK'
+    except Exception as e:
+        logging.error(f"Error processing webhook: {e}")
+        return 'Error', 500
+
+@flask_app.route('/health')
+def health():
+    """Health check endpoint."""
+    return 'OK'
+
+@flask_app.route('/')
+def home():
+    """Home endpoint."""
+    return 'TrustCoin Bot French is running!'
+
+def run_flask():
+    """Run Flask app in a separate thread."""
+    port = int(os.getenv('PORT', 10000))
+    flask_app.run(host='0.0.0.0', port=port, debug=False)
+
 def main() -> None:
-    """Initialize the bot and start polling."""
-    app = ApplicationBuilder().token(BOT_TOKEN_FR).build()
-
-
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(button_handler))
-    app.run_polling()
+    """Initialize the bot."""
+    global bot_app
+    
+    try:
+        bot_app = ApplicationBuilder().token(BOT_TOKEN_FR).build()
+        bot_app.add_handler(CommandHandler("start", start))
+        bot_app.add_handler(CallbackQueryHandler(button_handler))
+        
+        webhook_url = os.getenv('WEBHOOK_URL')
+        
+        if webhook_url:
+            # Production mode with webhook
+            logging.info("Starting bot in webhook mode...")
+            
+            # Set webhook
+            asyncio.run(bot_app.bot.set_webhook(url=webhook_url))
+            
+            # Start Flask server
+            run_flask()
+        else:
+            # Development mode with polling
+            logging.info("Starting bot in polling mode...")
+            bot_app.run_polling(drop_pending_updates=True)
+            
+    except InvalidToken:
+        logging.error("❌ Invalid bot token. Please check your BOT_TOKEN_FR.")
+        raise
+    except Exception as e:
+        logging.error(f"❌ Error starting bot: {e}")
+        raise
 
 if __name__ == "__main__":
     main()
