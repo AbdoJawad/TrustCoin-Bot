@@ -1,8 +1,5 @@
 import os
-import logging
-from flask import Flask, request
-from dotenv import load_dotenv
-from telegram import (
+rt (
     Update,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -14,15 +11,9 @@ from telegram.ext import (
     CallbackQueryHandler,
     ContextTypes,
 )
-import asyncio
-import threading
-from telegram.error import InvalidToken
 
 # Load environment variables from .env file
-load_dotenv()
-
-# Get bot token from environment variables
-BOT_TOKEN_ENG = os.getenv('BOT_TOKEN_ENG')
+loa# getenv('BOT_TOKEN_ENG')
 
 # Validate that the bot token is loaded
 if not BOT_TOKEN_ENG:
@@ -379,87 +370,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 "Invalid option. Returning to main menu.", reply_markup=build_main_menu()
             )
 
-# Flask app for webhook
-flask_app = Flask(__name__)
+def main() -> None:
+    """Initialize the bot and start polling."""
+    app = ApplicationBuilder().token(BOT_TOKEN_ENG).build()
 
-# Global bot application
-bot_app = None
 
-def setup_bot():
-    """Setup the bot application"""
-    global bot_app
-    bot_app = ApplicationBuilder().token(BOT_TOKEN_ENG).build()
-    bot_app.add_handler(CommandHandler("start", start))
-    bot_app.add_handler(CallbackQueryHandler(button_handler))
-    return bot_app
-
-@flask_app.route('/webhook', methods=['POST'])
-def webhook():
-    """Handle incoming webhook updates"""
-    try:
-        json_data = request.get_json()
-        if json_data:
-            update = Update.de_json(json_data, bot_app.bot)
-            # Process update in background
-            asyncio.create_task(bot_app.process_update(update))
-        return 'OK', 200
-    except Exception as e:
-        logging.error(f"Webhook error: {e}")
-        return 'Error', 500
-
-@flask_app.route('/health', methods=['GET'])
-def health_check():
-    """Health check endpoint"""
-    return {'status': 'healthy', 'bot': 'TrustCoin English Bot'}, 200
-
-@flask_app.route('/', methods=['GET'])
-def home():
-    """Home endpoint"""
-    return {'message': 'TrustCoin English Bot is running!', 'status': 'active'}, 200
-
-def run_bot_polling():
-    """Run bot in polling mode (for local development)"""
-    if bot_app:
-        bot_app.run_polling(drop_pending_updates=True)
-
-def main():
-    """Initialize and run the bot"""
-    # Setup logging
-    logging.basicConfig(
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        level=logging.INFO
-    )
-    
-    # Setup bot
-    setup_bot()
-    
-    # Check if running on Render (webhook mode) or locally (polling mode)
-    port = int(os.environ.get('PORT', 5000))
-    webhook_url = os.environ.get('WEBHOOK_URL')
-    
-    if webhook_url:
-        # Webhook mode for production (Render)
-        logging.info(f"Starting webhook mode on port {port}")
-        try:
-            # Set webhook
-            bot_app.bot.set_webhook(url=f"{webhook_url}/webhook")
-            logging.info(f"Webhook set to: {webhook_url}/webhook")
-        except Exception as e:
-            logging.error(f"Failed to set webhook: {e}")
-        
-        # Start Flask app
-        flask_app.run(host='0.0.0.0', port=port, debug=False)
-    else:
-        # Polling mode for local development
-        logging.info("Starting polling mode for local development")
-        # Delete webhook if exists
-        try:
-            bot_app.bot.delete_webhook()
-        except Exception as e:
-            logging.warning(f"Could not delete webhook: {e}")
-        
-        # Run polling
-        run_bot_polling()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CallbackQueryHandler(button_handler))
+    app.run_polling()
 
 if __name__ == "__main__":
     main()
