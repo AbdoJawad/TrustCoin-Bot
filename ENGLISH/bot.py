@@ -55,12 +55,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
     
     # Send logo with welcome message
-    logo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'trustcoin_logo.svg')
+    logo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'logo.png')
     
     try:
         with open(logo_path, 'rb') as logo_file:
             await update.message.reply_photo(
-                photo=InputFile(logo_file, filename='trustcoin_logo.svg'),
+                photo=InputFile(logo_file, filename='logo.png'),
                 caption=welcome_text,
                 reply_markup=build_main_menu(),
                 parse_mode="Markdown"
@@ -340,7 +340,8 @@ def main() -> None:
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
-    app.run_polling()
+    
+    app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
     main()
