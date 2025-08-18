@@ -1,5 +1,9 @@
 import os
+import logging
+import asyncio
+import threading
 from dotenv import load_dotenv
+from flask import Flask, request
 from telegram import (
     Update,
     InlineKeyboardButton,
@@ -12,6 +16,7 @@ from telegram.ext import (
     CallbackQueryHandler,
     ContextTypes,
 )
+from telegram.error import InvalidToken
 
 # Load environment variables
 load_dotenv()
@@ -110,12 +115,65 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await send_or_edit_message("خيار غير صحيح. العودة للقائمة الرئيسية.", build_main_menu())
 
 def main() -> None:
-    """Initialize the bot and start polling."""
-    app = ApplicationBuilder().token(BOT_TOKEN_ARA).build()
-
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(button_handler))
-    app.run_polling()
+    """Initialize the bot with Flask webhook support for production or polling for development."""
+    try:
+        # Initialize the Telegram bot application
+        app = ApplicationBuilder().token(BOT_TOKEN_ARA).build()
+        
+        # Add handlers
+        app.add_handler(CommandHandler("start", start))
+        app.add_handler(CallbackQueryHandler(button_handler))
+        
+        # Check if we're running in webhook mode (production) or polling mode (development)
+        webhook_url = os.getenv('WEBHOOK_URL')
+        port = int(os.getenv('PORT', 5000))
+        
+        if webhook_url:
+            # Production mode with webhook
+            print(f"🚀 Starting Arabic bot in webhook mode on port {port}")
+            
+            # Initialize Flask app
+            flask_app = Flask(__name__)
+            
+            @flask_app.route('/webhook', methods=['POST'])
+            def webhook():
+                """Handle incoming webhook requests from Telegram."""
+                try:
+                    update = Update.de_json(request.get_json(force=True), app.bot)
+                    # Run the update handler in a separate thread to avoid blocking
+                    def run_update():
+                        asyncio.run(app.process_update(update))
+                    threading.Thread(target=run_update).start()
+                    return 'OK'
+                except Exception as e:
+                    logging.error(f"Error processing webhook: {e}")
+                    return 'Error', 500
+            
+            @flask_app.route('/health', methods=['GET'])
+            def health():
+                """Health check endpoint."""
+                return {'status': 'healthy', 'bot': 'arabic'}
+            
+            @flask_app.route('/', methods=['GET'])
+            def home():
+                """Home endpoint."""
+                return {'message': 'TrustCoin Arabic Bot is running!', 'status': 'active'}
+            
+            # Set webhook
+            asyncio.run(app.bot.set_webhook(url=f"{webhook_url}/webhook"))
+            
+            # Start Flask server
+            flask_app.run(host='0.0.0.0', port=port, debug=False)
+        else:
+            # Development mode with polling
+            print("🔄 Starting Arabic bot in polling mode (development)")
+            app.run_polling(drop_pending_updates=True)
+            
+    except InvalidToken:
+        print("❌ Invalid bot token. Please check your BOT_TOKEN_ARA in .env file.")
+    except Exception as e:
+        print(f"❌ Error starting Arabic bot: {e}")
+        logging.error(f"Bot startup error: {e}")
 
 if __name__ == "__main__":
     main()
