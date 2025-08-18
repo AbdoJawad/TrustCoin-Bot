@@ -4,6 +4,7 @@ from telegram import (
     Update,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    InputFile,
 )
 from telegram.ext import (
     ApplicationBuilder,
@@ -52,11 +53,25 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "📱 Download the app now and start your cryptocurrency journey!\n\n"
         "👇 Choose a section to learn more:"
     )
-    await update.message.reply_text(
-        welcome_text,
-        reply_markup=build_main_menu(),
-        parse_mode="Markdown"
-    )
+    
+    # Send logo with welcome message
+    logo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'trustcoin_logo.svg')
+    
+    try:
+        with open(logo_path, 'rb') as logo_file:
+            await update.message.reply_photo(
+                photo=InputFile(logo_file, filename='trustcoin_logo.svg'),
+                caption=welcome_text,
+                reply_markup=build_main_menu(),
+                parse_mode="Markdown"
+            )
+    except FileNotFoundError:
+        # Fallback to text message if logo not found
+        await update.message.reply_text(
+            welcome_text,
+            reply_markup=build_main_menu(),
+            parse_mode="Markdown"
+        )
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle all callback queries from inline keyboards."""
