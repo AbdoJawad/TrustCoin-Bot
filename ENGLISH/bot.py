@@ -435,6 +435,12 @@ def home():
 def run_flask():
     """Run Flask app in a separate thread."""
     port = int(os.getenv('PORT', 8443))
+    
+    # Suppress Flask development server warning
+    import logging
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
+    
     # Always run Flask server for render.com compatibility
     flask_app.run(host='0.0.0.0', port=port, debug=False)
 

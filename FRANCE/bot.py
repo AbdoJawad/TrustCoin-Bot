@@ -390,9 +390,20 @@ def main() -> None:
     global bot_app
     
     try:
-        # Create health check file for Docker
-        with open('/tmp/bot_healthy', 'w') as f:
-            f.write('starting')
+        # Create health check file for Docker (cross-platform compatible)
+        health_file_created = False
+        try:
+            with open('/tmp/bot_healthy', 'w') as f:
+                f.write('starting')
+            health_file_created = True
+        except (OSError, PermissionError):
+            # Fallback for Windows - create local health file
+            try:
+                with open('bot_healthy_french.txt', 'w') as f:
+                    f.write('starting')
+                health_file_created = True
+            except Exception as e:
+                logging.warning(f"Could not create health check file: {e}")
             
         bot_app = ApplicationBuilder().token(BOT_TOKEN_FR).build()
         bot_app.add_handler(CommandHandler("start", start))
@@ -412,9 +423,17 @@ def main() -> None:
             # Set webhook
             asyncio.run(bot_app.bot.set_webhook(url=webhook_url))
             
-            # Update health status
-            with open('/tmp/bot_healthy', 'w') as f:
-                f.write('running')
+            # Update health status (cross-platform)
+            if health_file_created:
+                try:
+                    with open('/tmp/bot_healthy', 'w') as f:
+                        f.write('running')
+                except (OSError, PermissionError):
+                    try:
+                        with open('bot_healthy_french.txt', 'w') as f:
+                            f.write('running')
+                    except Exception as e:
+                        logging.warning(f"Could not update health check file: {e}")
             
             # Keep the main thread alive
             import time
@@ -424,27 +443,41 @@ def main() -> None:
             # Development mode with polling
             logging.info("Starting French bot in polling mode...")
             
-            # Update health status
-            with open('/tmp/bot_healthy', 'w') as f:
-                f.write('running')
+            # Update health status (cross-platform)
+            if health_file_created:
+                try:
+                    with open('/tmp/bot_healthy', 'w') as f:
+                        f.write('running')
+                except (OSError, PermissionError):
+                    try:
+                        with open('bot_healthy_french.txt', 'w') as f:
+                            f.write('running')
+                    except Exception as e:
+                        logging.warning(f"Could not update health check file: {e}")
                 
             bot_app.run_polling(drop_pending_updates=True)
             
     except InvalidToken:
         logging.error("❌ Invalid bot token. Please check your BOT_TOKEN_FR.")
-        # Remove health file on error
+        # Remove health file on error (cross-platform)
         try:
             os.remove('/tmp/bot_healthy')
         except:
-            pass
+            try:
+                os.remove('bot_healthy_french.txt')
+            except:
+                pass
         raise
     except Exception as e:
         logging.error(f"❌ Error starting French bot: {e}")
-        # Remove health file on error
+        # Remove health file on error (cross-platform)
         try:
             os.remove('/tmp/bot_healthy')
         except:
-            pass
+            try:
+                os.remove('bot_healthy_french.txt')
+            except:
+                pass
         raise
 
 if __name__ == "__main__":

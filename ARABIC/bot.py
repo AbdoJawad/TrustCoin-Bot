@@ -498,9 +498,14 @@ def main() -> None:
     global bot_app
     
     try:
-        # Create health check file for Docker
-        with open('/tmp/bot_healthy', 'w') as f:
-            f.write('starting')
+        # Create health check file for Docker (Windows compatible)
+        try:
+            with open('/tmp/bot_healthy', 'w') as f:
+                f.write('starting')
+        except:
+            # Windows fallback
+            with open('bot_healthy_arabic.txt', 'w') as f:
+                f.write('starting')
             
         bot_app = ApplicationBuilder().token(BOT_TOKEN_ARA).build()
         bot_app.add_handler(CommandHandler("start", start))
@@ -521,8 +526,12 @@ def main() -> None:
             asyncio.run(bot_app.bot.set_webhook(url=webhook_url))
             
             # Update health status
-            with open('/tmp/bot_healthy', 'w') as f:
-                f.write('running')
+            try:
+                with open('/tmp/bot_healthy', 'w') as f:
+                    f.write('running')
+            except:
+                with open('bot_healthy_arabic.txt', 'w') as f:
+                    f.write('running')
             
             # Keep the main thread alive
             import time
@@ -533,8 +542,12 @@ def main() -> None:
             logging.info("Starting Arabic bot in polling mode...")
             
             # Update health status
-            with open('/tmp/bot_healthy', 'w') as f:
-                f.write('running')
+            try:
+                with open('/tmp/bot_healthy', 'w') as f:
+                    f.write('running')
+            except:
+                with open('bot_healthy_arabic.txt', 'w') as f:
+                    f.write('running')
                 
             bot_app.run_polling(drop_pending_updates=True)
             
@@ -544,7 +557,10 @@ def main() -> None:
         try:
             os.remove('/tmp/bot_healthy')
         except:
-            pass
+            try:
+                os.remove('bot_healthy_arabic.txt')
+            except:
+                pass
         raise
     except Exception as e:
         logging.error(f"❌ Error starting Arabic bot: {e}")
@@ -552,7 +568,10 @@ def main() -> None:
         try:
             os.remove('/tmp/bot_healthy')
         except:
-            pass
+            try:
+                os.remove('bot_healthy_arabic.txt')
+            except:
+                pass
         raise
 
 if __name__ == "__main__":
