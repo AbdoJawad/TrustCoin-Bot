@@ -489,7 +489,8 @@ def home():
 
 def run_flask():
     """Run Flask app in a separate thread."""
-    port = int(os.getenv('PORT', 10001))  # Different port for Arabic bot
+    port = int(os.getenv('PORT', 8444))  # Different port for Arabic bot
+    # Always run Flask server for render.com compatibility
     flask_app.run(host='0.0.0.0', port=port, debug=False)
 
 def main() -> None:
@@ -497,31 +498,61 @@ def main() -> None:
     global bot_app
     
     try:
+        # Create health check file for Docker
+        with open('/tmp/bot_healthy', 'w') as f:
+            f.write('starting')
+            
         bot_app = ApplicationBuilder().token(BOT_TOKEN_ARA).build()
         bot_app.add_handler(CommandHandler("start", start))
         bot_app.add_handler(CallbackQueryHandler(button_handler))
         
         webhook_url = os.getenv('WEBHOOK_URL')
         
+        # Always start Flask server for render.com compatibility
+        flask_thread = threading.Thread(target=run_flask, daemon=True)
+        flask_thread.start()
+        logging.info("Flask server started on port " + str(os.getenv('PORT', 8444)))
+        
         if webhook_url:
             # Production mode with webhook
-            logging.info("Starting bot in webhook mode...")
+            logging.info("Starting Arabic bot in webhook mode...")
             
             # Set webhook
             asyncio.run(bot_app.bot.set_webhook(url=webhook_url))
             
-            # Start Flask server
-            run_flask()
+            # Update health status
+            with open('/tmp/bot_healthy', 'w') as f:
+                f.write('running')
+            
+            # Keep the main thread alive
+            import time
+            while True:
+                time.sleep(1)
         else:
             # Development mode with polling
-            logging.info("Starting bot in polling mode...")
+            logging.info("Starting Arabic bot in polling mode...")
+            
+            # Update health status
+            with open('/tmp/bot_healthy', 'w') as f:
+                f.write('running')
+                
             bot_app.run_polling(drop_pending_updates=True)
             
     except InvalidToken:
         logging.error("❌ Invalid bot token. Please check your BOT_TOKEN_ARA.")
+        # Remove health file on error
+        try:
+            os.remove('/tmp/bot_healthy')
+        except:
+            pass
         raise
     except Exception as e:
-        logging.error(f"❌ Error starting bot: {e}")
+        logging.error(f"❌ Error starting Arabic bot: {e}")
+        # Remove health file on error
+        try:
+            os.remove('/tmp/bot_healthy')
+        except:
+            pass
         raise
 
 if __name__ == "__main__":

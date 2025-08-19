@@ -434,7 +434,8 @@ def home():
 
 def run_flask():
     """Run Flask app in a separate thread."""
-    port = int(os.getenv('PORT', 10000))
+    port = int(os.getenv('PORT', 8443))
+    # Always run Flask server for render.com compatibility
     flask_app.run(host='0.0.0.0', port=port, debug=False)
 
 def main() -> None:
@@ -452,6 +453,11 @@ def main() -> None:
         
         webhook_url = os.getenv('WEBHOOK_URL')
         
+        # Always start Flask server for render.com compatibility
+        flask_thread = threading.Thread(target=run_flask, daemon=True)
+        flask_thread.start()
+        logging.info("Flask server started on port " + str(os.getenv('PORT', 8443)))
+        
         if webhook_url:
             # Production mode with webhook
             logging.info("Starting English bot in webhook mode...")
@@ -463,8 +469,10 @@ def main() -> None:
             with open('/tmp/bot_healthy', 'w') as f:
                 f.write('running')
             
-            # Start Flask server
-            run_flask()
+            # Keep the main thread alive
+            import time
+            while True:
+                time.sleep(1)
         else:
             # Development mode with polling
             logging.info("Starting English bot in polling mode...")
