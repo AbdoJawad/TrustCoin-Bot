@@ -381,7 +381,8 @@ def home():
 
 def run_flask():
     """Run Flask app in a separate thread."""
-    port = int(os.getenv('PORT', 8445))  # Different port for French bot
+    # Use specific port for French bot, ignore global PORT env var  
+    port = 8445
     # Always run Flask server for render.com compatibility
     flask_app.run(host='0.0.0.0', port=port, debug=False)
 
@@ -414,7 +415,7 @@ def main() -> None:
         # Always start Flask server for render.com compatibility
         flask_thread = threading.Thread(target=run_flask, daemon=True)
         flask_thread.start()
-        logging.info("Flask server started on port " + str(os.getenv('PORT', 8445)))
+        logging.info("Flask server started on port 8445 (French Bot)")
         
         if webhook_url:
             # Production mode with webhook
