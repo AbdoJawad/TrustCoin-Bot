@@ -2,6 +2,8 @@ import os
 import logging
 import asyncio
 import threading
+import signal
+import sys
 from dotenv import load_dotenv
 from flask import Flask, request
 from telegram import (
@@ -27,6 +29,26 @@ logging.basicConfig(
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
+
+# Global bot application instance
+bot_app = None
+
+# Signal handler for graceful shutdown
+def signal_handler(sig, frame):
+    """Handle shutdown signals gracefully."""
+    logger.info("🛑 Received shutdown signal. Stopping bot gracefully...")
+    if bot_app:
+        try:
+            # Create health status file for Docker
+            with open('/tmp/bot_healthy', 'w') as f:
+                f.write('stopping')
+        except:
+            pass
+    sys.exit(0)
+
+# Register signal handlers
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 # Get bot token from environment variables
 BOT_TOKEN_ENG = os.getenv('BOT_TOKEN_ENG')
@@ -420,6 +442,10 @@ def main() -> None:
     global bot_app
     
     try:
+        # Create health check file for Docker
+        with open('/tmp/bot_healthy', 'w') as f:
+            f.write('starting')
+            
         bot_app = ApplicationBuilder().token(BOT_TOKEN_ENG).build()
         bot_app.add_handler(CommandHandler("start", start))
         bot_app.add_handler(CallbackQueryHandler(button_handler))
@@ -428,23 +454,42 @@ def main() -> None:
         
         if webhook_url:
             # Production mode with webhook
-            logging.info("Starting bot in webhook mode...")
+            logging.info("Starting English bot in webhook mode...")
             
             # Set webhook
             asyncio.run(bot_app.bot.set_webhook(url=webhook_url))
+            
+            # Update health status
+            with open('/tmp/bot_healthy', 'w') as f:
+                f.write('running')
             
             # Start Flask server
             run_flask()
         else:
             # Development mode with polling
-            logging.info("Starting bot in polling mode...")
+            logging.info("Starting English bot in polling mode...")
+            
+            # Update health status
+            with open('/tmp/bot_healthy', 'w') as f:
+                f.write('running')
+                
             bot_app.run_polling(drop_pending_updates=True)
             
     except InvalidToken:
         logging.error("❌ Invalid bot token. Please check your BOT_TOKEN_ENG.")
+        # Remove health file on error
+        try:
+            os.remove('/tmp/bot_healthy')
+        except:
+            pass
         raise
     except Exception as e:
-        logging.error(f"❌ Error starting bot: {e}")
+        logging.error(f"❌ Error starting English bot: {e}")
+        # Remove health file on error
+        try:
+            os.remove('/tmp/bot_healthy')
+        except:
+            pass
         raise
 
 if __name__ == "__main__":

@@ -11,13 +11,16 @@ services:
       - BOT_TOKEN_ARA=${BOT_TOKEN_ARA}
       - BOT_TOKEN_FR=${BOT_TOKEN_FR}
       - DEBUG=${DEBUG:-False}
+      - PORT=8443
     env_file:
       - .env
     restart: unless-stopped
     networks:
       - trustcoin-network
+    ports:
+      - "8443:8443"
     healthcheck:
-      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      test: ["CMD", "python", "-c", "import os; exit(0 if os.path.exists('/tmp/bot_healthy') else 1)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -27,6 +30,15 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    volumes:
+      - ./logs:/app/logs
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
   # Arabic Bot Service
   trustcoin-bot-arabic:
@@ -38,16 +50,34 @@ services:
       - BOT_TOKEN_ARA=${BOT_TOKEN_ARA}
       - BOT_TOKEN_FR=${BOT_TOKEN_FR}
       - DEBUG=${DEBUG:-False}
+      - PORT=8444
     env_file:
       - .env
     restart: unless-stopped
     networks:
       - trustcoin-network
+    ports:
+      - "8444:8444"
     healthcheck:
-      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      test: ["CMD", "python", "-c", "import os; exit(0 if os.path.exists('/tmp/bot_healthy') else 1)"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    volumes:
+      - ./logs:/app/logs
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
       start_period: 40s
     logging:
       driver: "json-file"

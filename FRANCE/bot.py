@@ -2,6 +2,8 @@ import os
 import logging
 import asyncio
 import threading
+import signal
+import sys
 from dotenv import load_dotenv
 from flask import Flask, request
 from telegram import (
